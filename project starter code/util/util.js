@@ -12,7 +12,14 @@ import Jimp from "jimp";
  export async function filterImageFromURL(inputURL) {
   return new Promise(async (resolve, reject) => {
     try {
-      const photo = await Jimp.read(inputURL);
+      // Download with a User-Agent header; some hosts (e.g. Wikimedia) reject requests without one
+      const response = await fetch(inputURL, {
+        headers: { "User-Agent": "image-filter-app/1.0" },
+      });
+      if (!response.ok) {
+        throw new Error(`Image download failed: ${response.status}`);
+      }
+      const photo = await Jimp.read(Buffer.from(await response.arrayBuffer()));
       const outpath =
         "/tmp/filtered." + Math.floor(Math.random() * 2000) + ".jpg";
       await photo
